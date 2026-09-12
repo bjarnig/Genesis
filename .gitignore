@@ -1,0 +1,13 @@
+.DS_Store
+
+
+# DemandEnvGen blocks harvested from across Works/: they belong to the projects
+# they came from, not to this one
+envgen/
+
+# audio renders stay out of the code tree
+*.wav
+*.aiff
+*.aif
+*.flac
+*.mp3
