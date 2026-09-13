@@ -33,6 +33,7 @@ Then `~play.(\gorse)` to hear one, `~free.()` to put everything back to sleep.
 | `core/ndef-faders-setups.scd` | one block per process, opens its window |
 | `core/presets.scd` | posted states, one line each; `//` and `/* */` take one out of the set |
 | `core/preset-morph.scd` | travel from one preset to another, nine ways, over a duration |
+| `core/selection-principles.scd` | Koenig's six selection principles from SSP, and `~ssp`, which builds a process from a LIST / SELECT / SEGMENT / PERMUTATION plan |
 | `workflows/wf-*.scd` | five workflows: granulation, sediment, waveset, feedback, resonance |
 | `spatial/spatialisers.scd` | five ways of putting a 4-channel process into 8 channels |
 | `variants/` | the same ten in one direction each: distortion, feedback, pitch |

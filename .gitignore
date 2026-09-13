@@ -11,3 +11,6 @@ envgen/
 *.aif
 *.flac
 *.mp3
+
+# scanned book photos/PDFs: 562MB, too big for the code tree
+books/
