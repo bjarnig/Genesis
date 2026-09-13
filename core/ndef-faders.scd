@@ -2,7 +2,11 @@
 // A fader GUI for an Ndef/NF: a horizontal slider for each parameter you pass a
 // spec for. Parameters without a spec are not shown and are left at the Ndef's
 // own defaults, untouched. Plus play/stop, reset, four randomize distributions,
-// and a per-slider "include" toggle so randomize only moves the opted-in rows.
+// a per-slider "include" toggle so randomize only moves the opted-in rows, and
+// eight preset slots: click a filled slot to jump the faders back to it,
+// double-click a slot to grab the current fader state into it instead.
+// printState then prints every filled slot, one line per slot, ready to paste
+// as a block into presets.scd.
 // Dark-blue theme.
 //
 // Evaluate this block once to define ~ndefFaders, then:
@@ -14,7 +18,7 @@
 //   ));
 //   g.randomize(\beta);    // also \uni, \exp, \walk, from code too
 //   g.resetAll;
-//   g.printState;          // the line to paste into presets.scd
+//   g.printState;          // one line per filled slot, to paste into presets.scd
 //
 // Give the specs a default (5th ControlSpec arg) so reset lands on the Ndef's
 // own argument defaults; see ndef-faders-setups.scd.
@@ -36,13 +40,16 @@
 	var lambda = 3;             // exponential decay towards the low end
 	var walkStep = 0.22;        // walk step size, in unmapped (0..1) units
 
-	var pairs, rows, grid, footer, transport, dice, win, unmapped, randomize, reset, post, btn;
+	var pairs, rows, grid, footer, transport, dice, slots, slotRow, win, unmapped, randomize, reset, post, btn;
 
 	specs = specs ? ();
 	pairs = ndef.getKeysValues;
 	keys = (keys ?? { pairs.collect(_[0]) }).select { |k| specs[k].notNil };
 
-	win = Window("faders: " ++ ndef.key, bounds ?? { Rect(200, 140, 480, (keys.size * 30) + 112) })
+	// eight preset slots, each either nil (empty) or a captured [key, value] list
+	slots = Array.newClear(8);
+
+	win = Window("faders: " ++ ndef.key, bounds ?? { Rect(200, 140, 480, (keys.size * 30) + 146) })
 		.background_(bg);
 
 	// one slider row per specced parameter: label | slider | numberbox | include
@@ -100,9 +107,18 @@
 	// reset ignores the include toggles: it is a way back to a known state
 	reset = { rows.do { |r| r[\update].(r[\spec].default) } };
 
+	// one line per filled slot, in presets.scd's own format; falls back to the
+	// live fader state when no slot has been grabbed yet
 	post = {
-		var body = rows.collect { |r| "\\" ++ r[\key] ++ ", " ++ r[\number].value }.join(", ");
-		(ndef.class.name ++ "(" ++ ndef.key.asCompileString ++ ").set(" ++ body ++ ");").postln;
+		var line = { |kvs|
+			var body = kvs.collect { |kv| "\\" ++ kv[0] ++ ", " ++ kv[1] }.join(", ");
+			ndef.class.name ++ "(" ++ ndef.key.asCompileString ++ ").set(" ++ body ++ ");"
+		};
+		var lines = slots.reject(_.isNil).collect(line);
+		if(lines.isEmpty) {
+			lines = [line.(rows.collect { |r| [r[\key], r[\number].value] })];
+		};
+		lines.do(_.postln);
 	};
 
 	grid = GridLayout.rows(*rows.collect { |r| [r[\label], r[\slider], r[\number], r[\include]] })
@@ -127,7 +143,37 @@
 		btn.("walk", bg, amber, { randomize.(\walk) })
 	);
 
-	win.layout = VLayout(grid, transport, dice).spacing_(10).margins_(12);
+	// a slot button: a single click jumps every fader back to what the slot
+	// holds (a no-op on an empty slot); a double-click grabs the live fader
+	// state into it instead (lit = filled, dim = still empty). The single click
+	// is held for one clock tick so a following second click can cancel it -
+	// otherwise saving would first recall the old preset and overwrite it with
+	// that, never with what was actually on the faders.
+	slotRow = HLayout(*(1..8).collect { |i|
+		var b = Button(win).font_(font).fixedHeight_(24)
+			.states_([[i.asString, text, panel]]);
+		var pendingRecall;
+		b.mouseDownAction_({ |v, x, y, modifiers, buttonNumber, clickCount|
+			if(clickCount >= 2) {
+				pendingRecall = nil;
+				slots[i - 1] = rows.collect { |r| [r[\key], r[\number].value] };
+				b.states_([[i.asString, bg, mint]]).refresh;
+			} {
+				pendingRecall = true;
+				AppClock.sched(0.4, {
+					if(pendingRecall == true) {
+						slots[i - 1] !? { |kvs|
+							kvs.do { |kv| rows.detect { |r| r[\key] == kv[0] } !? { |r| r[\update].(kv[1]) } };
+						};
+					};
+					nil
+				});
+			};
+		});
+		b
+	});
+
+	win.layout = VLayout(grid, transport, dice, slotRow).spacing_(10).margins_(12);
 	win.front;
 	win.onClose_({ rows = nil });
 

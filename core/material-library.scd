@@ -20,12 +20,13 @@
 
 ~material = (
 
-	fern: (proxy: NF, func: { |lfnFreq = 0.25, repeats = 1, freqMult = 1, knumFrom = 1, knumTo = 100,
+	fern: (proxy: NF, func: { |lfnFreq = 0.25, repeats = 1, freqMult = 1, freqMult2 = 1, knumFrom = 1, knumTo = 100,
 		ampStep = 0.8, stiffness = 0.05, ampStepB = 0.45, stiffnessB = 0.03,
-		harmScale = 0.0625, detuneHi = 0.2, detuneLo = 0.2, amp = 0.7|
+		harmScale = 0.0625, detuneHi = 0.2, detuneLo = 0.2, templateType = 0, ampDistParam = 0.5,
+		seqMode = 0, factorsMult = 1, amp = 0.88|
 
 		var scale = 0.25;
-		var factors = [15, 5, 10, 20];
+		var factors = [15, 5, 10, 20] * factorsMult;
 
 		// Cyclegen fixes knum and the freqs array when the synth is built: the LFNoise
 		// only seeds one knum per channel, so its rate is not a control. Transposition
@@ -36,27 +37,29 @@
 
 		var scatter = Cyclegen.ar(
 			LFNoise1.ar(factors).range(knumFrom, knumTo * 5),
-			ampStep: ampStep, stiffness: stiffness, templateType: 1, seqMode: 2,
-			repeats: repeats, freqMul: freqMult,
-			freqs: Array.rand(16, 1, 1000)
+			ampStep: ampStep, stiffness: stiffness, templateType: templateType, seqMode: seqMode,
+			ampDistParam: ampDistParam, repeats: repeats, freqMul: freqMult,
+			freqs: Array.rand(16, 1, 1000) * freqMult2
 		) * scale;
 
 		// harmScale sets where this layer sits: 0.0625 keeps it subaudio, 1 puts it at pitch
 		var harmonic = Cyclegen.ar(
 			LFNoise1.ar(factors).range(knumFrom, knumTo),
-			ampStep: ampStepB, stiffness: stiffnessB, templateType: 1, seqMode: 2, interp: 2,
+			ampStep: ampStepB, stiffness: stiffnessB, templateType: templateType, seqMode: seqMode,
+			ampDistParam: ampDistParam, interp: 2,
 			repeats: repeats, freqMul: freqMult * harmScale * detune,
-			freqs: [65, 87, 98, 131]
+			freqs: [65, 87, 98, 131] * freqMult2
 		) * scale;
 
 		scatter + harmonic * amp
 	}),
 
 	moss: (proxy: NF, func: { |lfnFreq = 5, mod = 20, from = 9, to = 12, freqFrom = 10, freqTo = 1000,
-		jitter = 0.5, ampStep = 0.2, duty = 0.4, hpf = 40, sdm = 10, grainGain = 0.5, amp = 0.7|
+		jitter = 0.5, ampStep = 0.2, duty = 0.4, hpf = 40, sdm = 10, grainGain = 0.5,
+		knum = 126, factorsMult = 1, amp = 0.7|
 
-		var min = 0.1, max = 0.3, knum = 126;
-		var factors = [1, 2, 0.5, 0.25];
+		var min = 0.1, max = 0.3;
+		var factors = [1, 2, 0.5, 0.25] * factorsMult;
 		var sd = SampleDur.ir * sdm;
 
 		var folded = HPF.ar(
@@ -103,13 +106,14 @@
 	}),
 
 	nettle: (proxy: NF, func: { |a = 0.5, b = 0.5, c = 0.5, pmFreq = 10, modFrom = 50, wobLo = 500, wobHi = 800,
-		filtLo = 8000, filtHi = 19000, hpf = 30, demGain = 4, amp = 0.7|
+		filtLo = 8000, filtHi = 19000, hpf = 30, demGain = 4, cScale = 1000, bScale = 1000,
+		filtModScale = 0.1, lagTime = 0.15, gritGain = 0.6, eqFreqLo = 4000, eqFreqHi = 10000, amp = 0.7|
 
-		var modfreq = LFDClipNoise.ar(1000 * c).range(modFrom, LFNoise1.ar(0.01).range(wobLo, wobHi));
+		var modfreq = LFDClipNoise.ar(cScale * c).range(modFrom, LFNoise1.ar(0.01).range(wobLo, wobHi));
 		var mod = PMOsc.ar(pmFreq * a, modfreq, 1);
-		var grav = LeastChange.ar(GravityGrid.ar(0, 1000 * b), mod);
-		var filtMod = LFDClipNoise.ar(0.1 * b).range(filtLo, filtHi);
-		var grit = 0.6 * HPF.ar(LPF.ar(grav, Lag.ar(filtMod, 0.15)), hpf);
+		var grav = LeastChange.ar(GravityGrid.ar(0, bScale * b), mod);
+		var filtMod = LFDClipNoise.ar(filtModScale * b).range(filtLo, filtHi);
+		var grit = gritGain * HPF.ar(LPF.ar(grav, Lag.ar(filtMod, lagTime)), hpf);
 
 		var signal = DemandEnvGen.ar(
 			Dseq([-1, 0.1, Dwhite(-0.1, 0.1, 5), Dwhite(-0.2, 0.2, 5)], inf),
@@ -117,7 +121,7 @@
 		) * XLine.ar(0.0015, 0.15, 120);
 
 		var demwav = BPeakEQ.ar(
-			signal, Array.rand(4, 4000, 10000), 4,
+			signal, Array.rand(4, eqFreqLo, eqFreqHi), 4,
 			EnvGen.ar(Env([0, -1, -7], [4, 12]))
 		) * demGain;
 
@@ -158,7 +162,7 @@
 	}),
 
 	clover: (proxy: Ndef, func: { |ser = 500, sdm = 2.5, step = 2.5, brownLo = 1, brownHi = 7,
-		mf = 0.008, stepsGain = 0.3, amp = 0.7|
+		mf = 0.008, stepsGain = 0.3, stepsStep = 0.1, stepsLen = 40, amp = 0.85|
 
 		var sd = SampleDur.ir * sdm;
 
@@ -167,13 +171,15 @@
 			sd * Dbrown(brownLo, brownHi, step)
 		) * mf;
 
-		var steps = DemandEnvGen.ar(
-			Dseq([Dseries(-1.0, 0.1, 40 ! 4)], inf),
+		// steps ramps from -1 well past 0 before wrapping, which is most of the DC
+		// defect; LeakDC removes it without touching the ramp's audible motion
+		var steps = LeakDC.ar(DemandEnvGen.ar(
+			Dseq([Dseries(-1.0, stepsStep, stepsLen ! 4)], inf),
 			Dseq([
 				Dwhite(1, 10, 4),
 				Dwhite(0.1, 100, 4)
 			], inf) * SampleDur.ir
-		) * stepsGain;
+		)) * stepsGain;
 
 		(foral + steps) * amp
 	}),

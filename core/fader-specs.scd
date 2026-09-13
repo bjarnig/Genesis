@@ -12,35 +12,44 @@
 ~specs = ~specs ? ();
 
 ~specs[\fern] = (
-	// knumFrom / knumTo are deliberately absent: Cyclegen fixes knum when the synth
-	// is built, so they only bite on the next ~gen.(\fern), not on a fader move.
-	lfnFreq:    ControlSpec(0.005, 40, \exp, 0, 0.25),
-	repeats:    ControlSpec(1, 16, \lin, 1, 1),
-	freqMult:   ControlSpec(0.25, 10, \exp, 0, 1),
-	harmScale:  ControlSpec(0.02, 4, \exp, 0, 0.0625),
-	ampStep:    ControlSpec(0.0, 1.0, \lin, 0, 0.8),
-	stiffness:  ControlSpec(0.0, 1.0, \lin, 0, 0.05),
-	ampStepB:   ControlSpec(0.0, 1.0, \lin, 0, 0.45),
-	stiffnessB: ControlSpec(0.0, 1.0, \lin, 0, 0.03),
-	detuneHi:   ControlSpec(0.0, 4.0, \lin, 0, 0.2),
-	detuneLo:   ControlSpec(0.0, 0.95, \lin, 0, 0.2),
-	amp:        ControlSpec(0, 1, \amp, 0, 0.7)
+	// knumFrom / knumTo still only bite on the next ~gen.(\fern): Cyclegen fixes
+	// knum when the synth is built, so a fader move here does nothing live.
+	lfnFreq:      ControlSpec(0.005, 40, \exp, 0, 0.25),
+	repeats:      ControlSpec(1, 16, \lin, 1, 1),
+	freqMult:     ControlSpec(0.25, 10, \exp, 0, 1),
+	freqMult2:    ControlSpec(0.1, 10, \exp, 0, 1),
+	knumFrom:     ControlSpec(1, 1000, \exp, 0, 1),
+	knumTo:       ControlSpec(1, 1000, \exp, 0, 100),
+	harmScale:    ControlSpec(0.02, 4, \exp, 0, 0.0625),
+	ampStep:      ControlSpec(0.0, 1.0, \lin, 0, 0.8),
+	stiffness:    ControlSpec(0.0, 1.0, \lin, 0, 0.05),
+	ampStepB:     ControlSpec(0.0, 1.0, \lin, 0, 0.45),
+	stiffnessB:   ControlSpec(0.0, 1.0, \lin, 0, 0.03),
+	detuneHi:     ControlSpec(0.0, 4.0, \lin, 0, 0.2),
+	detuneLo:     ControlSpec(0.0, 0.95, \lin, 0, 0.2),
+	templateType: ControlSpec(0, 4, \lin, 1, 0),
+	ampDistParam: ControlSpec(0.0, 1.0, \lin, 0, 0.5),
+	seqMode:      ControlSpec(0, 3, \lin, 1, 0),
+	factorsMult:  ControlSpec(0.1, 10, \exp, 0, 1),
+	amp:          ControlSpec(0, 1, \amp, 0, 0.88)
 );
 
 ~specs[\moss] = (
-	lfnFreq:   ControlSpec(0.02, 40, \exp, 0, 5),
-	mod:       ControlSpec(1, 200, \exp, 0, 20),
-	from:      ControlSpec(1, 40, \exp, 0, 9),
-	to:        ControlSpec(1, 60, \exp, 0, 12),
-	freqFrom:  ControlSpec(1, 500, \exp, 0, 10),
-	freqTo:    ControlSpec(100, 8000, \exp, 0, 1000),
-	jitter:    ControlSpec(0.0, 1.0, \lin, 0, 0.5),
-	ampStep:   ControlSpec(0.0, 1.0, \lin, 0, 0.2),
-	duty:      ControlSpec(0.0, 1.0, \lin, 0, 0.4),
-	hpf:       ControlSpec(20, 2000, \exp, 0, 40),
-	sdm:       ControlSpec(1, 60, \exp, 0, 10),
-	grainGain: ControlSpec(0, 4, \amp, 0, 0.5),
-	amp:       ControlSpec(0, 1, \amp, 0, 0.7)
+	lfnFreq:     ControlSpec(0.02, 40, \exp, 0, 5),
+	mod:         ControlSpec(1, 200, \exp, 0, 20),
+	from:        ControlSpec(1, 40, \exp, 0, 9),
+	to:          ControlSpec(1, 60, \exp, 0, 12),
+	freqFrom:    ControlSpec(1, 500, \exp, 0, 10),
+	freqTo:      ControlSpec(100, 8000, \exp, 0, 1000),
+	jitter:      ControlSpec(0.0, 1.0, \lin, 0, 0.5),
+	ampStep:     ControlSpec(0.0, 1.0, \lin, 0, 0.2),
+	duty:        ControlSpec(0.0, 1.0, \lin, 0, 0.4),
+	hpf:         ControlSpec(20, 2000, \exp, 0, 40),
+	sdm:         ControlSpec(1, 60, \exp, 0, 10),
+	grainGain:   ControlSpec(0, 4, \amp, 0, 0.5),
+	knum:        ControlSpec(1, 1000, \exp, 0, 126),
+	factorsMult: ControlSpec(0.1, 10, \exp, 0, 1),
+	amp:         ControlSpec(0, 1, \amp, 0, 0.7)
 );
 
 ~specs[\sedge] = (
@@ -62,18 +71,25 @@
 );
 
 ~specs[\nettle] = (
-	a:       ControlSpec(0.0, 1.0, \lin, 0, 0.5),
-	b:       ControlSpec(0.0, 1.0, \lin, 0, 0.5),
-	c:       ControlSpec(0.0, 1.0, \lin, 0, 0.5),
-	pmFreq:  ControlSpec(1, 100, \exp, 0, 10),
-	modFrom: ControlSpec(10, 500, \exp, 0, 50),
-	wobLo:   ControlSpec(100, 2000, \exp, 0, 500),
-	wobHi:   ControlSpec(200, 4000, \exp, 0, 800),
-	filtLo:  ControlSpec(1000, 15000, \exp, 0, 8000),
-	filtHi:  ControlSpec(5000, 20000, \exp, 0, 19000),
-	hpf:     ControlSpec(20, 2000, \exp, 0, 30),
-	demGain: ControlSpec(0.5, 12, \exp, 0, 4),
-	amp:     ControlSpec(0, 1, \amp, 0, 0.7)
+	a:           ControlSpec(0.0, 1.0, \lin, 0, 0.5),
+	b:           ControlSpec(0.0, 1.0, \lin, 0, 0.5),
+	c:           ControlSpec(0.0, 1.0, \lin, 0, 0.5),
+	pmFreq:      ControlSpec(1, 100, \exp, 0, 10),
+	modFrom:     ControlSpec(10, 500, \exp, 0, 50),
+	wobLo:       ControlSpec(100, 2000, \exp, 0, 500),
+	wobHi:       ControlSpec(200, 4000, \exp, 0, 800),
+	filtLo:      ControlSpec(1000, 15000, \exp, 0, 8000),
+	filtHi:      ControlSpec(5000, 20000, \exp, 0, 19000),
+	hpf:         ControlSpec(20, 2000, \exp, 0, 30),
+	demGain:     ControlSpec(0.5, 12, \exp, 0, 4),
+	cScale:      ControlSpec(100, 5000, \exp, 0, 1000),
+	bScale:      ControlSpec(100, 5000, \exp, 0, 1000),
+	filtModScale: ControlSpec(0.01, 2, \exp, 0, 0.1),
+	lagTime:     ControlSpec(0.001, 1, \exp, 0, 0.15),
+	gritGain:    ControlSpec(0.0, 2.0, \amp, 0, 0.6),
+	eqFreqLo:    ControlSpec(500, 8000, \exp, 0, 4000),
+	eqFreqHi:    ControlSpec(2000, 16000, \exp, 0, 10000),
+	amp:         ControlSpec(0, 1, \amp, 0, 0.7)
 );
 
 ~specs[\bramble] = (
@@ -100,7 +116,9 @@
 	brownHi:   ControlSpec(1, 40, \exp, 0, 7),
 	mf:        ControlSpec(0.001, 0.05, \exp, 0, 0.008),
 	stepsGain: ControlSpec(0.0, 1.0, \lin, 0, 0.3),
-	amp:       ControlSpec(0, 1, \amp, 0, 0.7)
+	stepsStep: ControlSpec(0.01, 1.0, \exp, 0, 0.1),
+	stepsLen:  ControlSpec(4, 160, \exp, 0, 40),
+	amp:       ControlSpec(0, 1, \amp, 0, 0.85)
 );
 
 ~specs[\thistle] = (
