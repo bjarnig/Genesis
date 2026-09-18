@@ -161,7 +161,7 @@
 		leaf + gravities * amp
 	}),
 
-	clover: (proxy: Ndef, func: { |ser = 500, sdm = 2.5, step = 2.5, brownLo = 1, brownHi = 7,
+	clover: (proxy: NF, func: { |ser = 500, sdm = 2.5, step = 2.5, brownLo = 1, brownHi = 7,
 		mf = 0.008, stepsGain = 0.3, stepsStep = 0.1, stepsLen = 40, amp = 0.85|
 
 		var sd = SampleDur.ir * sdm;
@@ -184,27 +184,30 @@
 		(foral + steps) * amp
 	}),
 
-	thistle: (proxy: Ndef, func: { |modFreq = 0.1, modFrom = 5, modTo = 7, ser = 600, step = 2.5,
-		brownLo = 1, brownHi = 7, sdm = 0.5, mf = 0.008, amp = 0.7|
+	// replaces the old thistle (2026-09-15): a bank of 4 bandpasses wandering
+	// over a noise-modulated Q, fed by a DemandEnvGen ramp. Kept 4-channel to
+	// match the rest of the library, so it still goes through the spatialisers.
+	thistle: (proxy: NF, func: { |fspeed = 0.2, sdm = 40, bpresfrom = 0.005, bpresto = 0.2,
+		a = 9, b = 5, min = 0.05, max = 0.5, freqLo = 100, freqHi = 2000,
+		sdRandLo = 0.125, sdRandHi = 2.0, drive = 20, amp = 0.5|
 
-		var size = 5, from = 1, to = 25;
-		var sdMod = SampleDur.ir * 2;
-		var sdSer = SampleDur.ir * sdm;
+		var channels = 4;
+		var bpfreqs = Array.series(channels, freqLo, (freqHi - freqLo) / channels);
+		var sd = SampleDur.ir * sdm * Array.rand(channels, sdRandLo, sdRandHi);
+		// one Q-wander rate per channel, fanned out from fspeed so they drift apart
+		var fspeedArray = [fspeed, fspeed * 1.2, fspeed * 1.4, fspeed * 1.6];
 
-		var modded = DemandEnvGen.ar(
-			Dseq([1, [-1, 0.5, 2, 0.1]], inf),
-			Dseq(Array.rand(size, from, to), inf) * sdMod
-		).mod(SinOsc.ar(LFNoise0.ar(modFreq).range(modFrom, modTo))) * 0.7;
+		var snd = DemandEnvGen.ar(
+			Dseq([min, min.neg, max], inf),
+			Dseq([sd * a, sd * b, Dwhite(sd * a, sd * b)], inf)
+		);
+		snd = SoftClipAmp8.ar(snd, drive) * amp;
 
-		var limited = Limiter.ar(DemandEnvGen.ar(
-			Dseq([Dseries(-0.5, [0.1, -0.1, -0.05, 1.15], ser)], inf),
-			sdSer * Dbrown(brownLo, brownHi, step)
-		) * mf) * 0.5;
-
-		(modded + limited) * amp
+		Limiter.ar(BBandPass.ar(snd, bpfreqs,
+			Lag.ar(LFNoise1.ar(fspeedArray).range(bpresfrom, bpresto))))
 	}),
 
-	yarrow: (proxy: Ndef, func: { |fspeed = 20, fcenter = 200, sdm = 0.1, mfreq = 0.01, filtBw = 6, modFreq = 5, harms = 120,
+	yarrow: (proxy: NF, func: { |fspeed = 20, fcenter = 200, sdm = 0.1, mfreq = 0.01, filtBw = 6, modFreq = 5, harms = 120,
 		drive = 10, bsRate = 5, bsLo = 100, bsHi = 8000, lpf = 12000, hpf = 30, amp = 0.7|
 
 		var a = 9, min = 0.1, max = 0.3;

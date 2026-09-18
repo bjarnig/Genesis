@@ -122,16 +122,20 @@
 );
 
 ~specs[\thistle] = (
-	modFreq: ControlSpec(0.01, 4, \exp, 0, 0.1),
-	modFrom: ControlSpec(1, 40, \exp, 0, 5),
-	modTo:   ControlSpec(2, 60, \exp, 0, 7),
-	ser:     ControlSpec(50, 2000, \exp, 0, 600),
-	step:    ControlSpec(0.1, 10, \exp, 0, 2.5),
-	brownLo: ControlSpec(0.5, 20, \exp, 0, 1),
-	brownHi: ControlSpec(1, 40, \exp, 0, 7),
-	sdm:     ControlSpec(0.1, 4, \exp, 0, 0.5),
-	mf:      ControlSpec(0.001, 0.05, \exp, 0, 0.008),
-	amp:     ControlSpec(0, 1, \amp, 0, 0.7)
+	fspeed:    ControlSpec(0.01, 20, \exp, 0, 0.2),
+	sdm:       ControlSpec(1, 400, \exp, 0, 40),
+	bpresfrom: ControlSpec(0.001, 1.0, \exp, 0, 0.005),
+	bpresto:   ControlSpec(0.001, 2.0, \exp, 0, 0.2),
+	a:         ControlSpec(0.5, 50, \exp, 0, 9),
+	b:         ControlSpec(0.5, 50, \exp, 0, 5),
+	min:       ControlSpec(0.001, 2.0, \exp, 0, 0.05),
+	max:       ControlSpec(0.001, 4.0, \exp, 0, 0.5),
+	freqLo:    ControlSpec(20, 2000, \exp, 0, 100),
+	freqHi:    ControlSpec(200, 16000, \exp, 0, 2000),
+	sdRandLo:  ControlSpec(0.01, 4, \exp, 0, 0.125),
+	sdRandHi:  ControlSpec(0.01, 8, \exp, 0, 2.0),
+	drive:     ControlSpec(1, 100, \exp, 0, 20),
+	amp:       ControlSpec(0, 1, \amp, 0, 0.5)
 );
 
 ~specs[\yarrow] = (
