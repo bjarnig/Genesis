@@ -17,6 +17,10 @@
 // linear on raw values. go always travels from the `from` preset to the `to` one,
 // so the slider stays meaningful and you can walk back; press swap to chain.
 // NF inherits from Ndef, so both work the same way here.
+//
+// dur and curve (5th/6th args) just seed the window's own secs/how controls -
+// still yours to change by hand after it opens. See preset-morph-setups.scd
+// for one block per process with a duration/curve matched to its own timescale.
 
 (
 
@@ -57,7 +61,7 @@
 	scatter: { |t| if(t >= 1) { 1 } { (t + 0.35.rand2).clip(0, 1) } }
 );
 
-~presetMorph = { |ndef, presets, specs, bounds|
+~presetMorph = { |ndef, presets, specs, bounds, dur = 10, curve = \linear|
 
 	var bg     = Color.new255(23, 27, 33);
 	var resolved;
@@ -146,9 +150,9 @@
 	toMenu = PopUpMenu(win).items_(names).value_(1).font_(font)
 		.background_(panel).stringColor_(text).action_({ |v| to = v.value });
 	methodMenu = PopUpMenu(win).items_(curves.collect(_.asString)).font_(font)
-		.background_(panel).stringColor_(text).value_(curves.indexOf(\linear));
+		.background_(panel).stringColor_(text).value_(curves.indexOf(curve.asSymbol).max(0));
 	durBox = NumberBox(win).font_(font).align_(\center).fixedWidth_(60).decimals_(2)
-		.background_(panel).normalColor_(text).typingColor_(amber).value_(10);
+		.background_(panel).normalColor_(text).typingColor_(amber).value_(dur);
 
 	posSlider = Slider(win).orientation_(\horizontal).background_(trough).knobColor_(accent)
 		.fixedHeight_(20).action_({ |v| stop.(); blend.(v.value) });

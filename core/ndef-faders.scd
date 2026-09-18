@@ -22,9 +22,13 @@
 //
 // Give the specs a default (5th ControlSpec arg) so reset lands on the Ndef's
 // own argument defaults; see ndef-faders-setups.scd.
+//
+// Pass `presets` (an array of Events, e.g. ~loadPresets's ~presets[\teasel], from
+// preset-morph.scd) to arrive with the slots already filled from presets.scd -
+// up to the first 8. Slots stay ordinary from there: double-click still overwrites.
 
 (
-~ndefFaders = { |ndef, specs, keys, bounds|
+~ndefFaders = { |ndef, specs, keys, bounds, presets|
 
 	var bg      = Color.new255(23, 27, 33);
 	var panel   = Color.new255(30, 35, 43);
@@ -46,8 +50,10 @@
 	pairs = ndef.getKeysValues;
 	keys = (keys ?? { pairs.collect(_[0]) }).select { |k| specs[k].notNil };
 
-	// eight preset slots, each either nil (empty) or a captured [key, value] list
+	// eight preset slots, each either nil (empty) or a captured [key, value] list.
+	// presets.scd's Events (~loadPresets) fill the first ones in file order.
 	slots = Array.newClear(8);
+	presets !? { |ps| ps.do { |p, i| if(i < 8) { slots[i] = p.getPairs.clump(2) } } };
 
 	win = Window("faders: " ++ ndef.key, bounds ?? { Rect(200, 140, 480, (keys.size * 30) + 146) })
 		.background_(bg);
@@ -150,8 +156,9 @@
 	// otherwise saving would first recall the old preset and overwrite it with
 	// that, never with what was actually on the faders.
 	slotRow = HLayout(*(1..8).collect { |i|
+		var filled = slots[i - 1].notNil;
 		var b = Button(win).font_(font).fixedHeight_(24)
-			.states_([[i.asString, text, panel]]);
+			.states_([[i.asString, if(filled) { bg } { text }, if(filled) { mint } { panel }]]);
 		var pendingRecall;
 		b.mouseDownAction_({ |v, x, y, modifiers, buttonNumber, clickCount|
 			if(clickCount >= 2) {
