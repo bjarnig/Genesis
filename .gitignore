@@ -14,3 +14,5 @@ envgen/
 
 # scanned book photos/PDFs: 562MB, too big for the code tree
 books/
+
+modules/
