@@ -7,11 +7,15 @@
 // Evaluate this block once to define ~ndefCurves, then:
 //
 //   c = ~ndefCurves.(~gen.(\sedge), ~specs[\sedge], presets: ~presets[\sedge]);
-//   c.run(20);          // walk every curve, left to right, over 20 seconds
-//   c.halt;
+//   c.run(20);          // proxy plays and every curve walks, over 20 seconds
+//   c.halt;             // pause both, keeping the playhead where it is
+//   c.rewind;           // playhead back to the left edge
 //   c.recallSlot(3);    // preset 3 as a flat line in every row
 //   c.place(0.5);       // sit halfway along the curves by hand
 //
+// One transport drives both halves: play starts the monitor and the pass
+// together and becomes stop, which pauses both without losing the position;
+// reset is separate. Pressing play once a pass has run out starts it over.
 // A preset button flattens every curve it names onto that preset's own value,
 // so recalling one sounds exactly like the preset does in the fader window -
 // that is the state to start drawing from. Parameters a preset does not mention
@@ -42,8 +46,8 @@
 	var dt = 0.01;   // control step: 100 sets a second, whatever the duration is
 
 	var pairs, rows, grid, transport, slotRow, win;
-	var durBox, posSlider, posBox, posLabel, btn, label;
-	var setCurve, apply, recall, run, stop, task, pos = 0;
+	var durBox, posSlider, posBox, posLabel, playBtn, btn, label;
+	var setCurve, apply, recall, startTask, stopTask, rewind, task, pos = 0;
 
 	specs = specs ? ();
 	pairs = ndef.getKeysValues;
@@ -101,24 +105,30 @@
 		t
 	};
 
-	stop = { task !? { task.stop }; task = nil };
+	stopTask = { task !? { task.stop }; task = nil };
 
-	// one pass, left to right, over the duration in the secs box. The duration is
-	// read once at the start, so a pass keeps the speed it began with.
-	run = {
-		var secs = durBox.value.max(dt);
-		stop.();
+	// The pass walks the shared playhead rather than a local one, so scrubbing or
+	// resetting mid-flight relocates a running pass instead of fighting it. The
+	// duration is read every step, so stretching it while running takes effect.
+	startTask = {
+		stopTask.();
+		if(pos >= 1.0) { pos = 0 };     // pressing play at the end starts over
 		task = Routine {
-			var t = 0;
-			while { t < 1.0 } {
-				apply.(t);
+			while { pos < 1.0 } {
+				apply.(pos);
 				dt.wait;
-				t = t + (dt / secs);
+				pos = pos + (dt / durBox.value.max(dt));
 			};
 			apply.(1.0);     // always land exactly on the right-hand edge
-			task = nil;
+			task = nil;      // the pass is over; the monitor is not
 		}.play(AppClock);    // AppClock, so apply's GUI writes need no defer
-		task
+	};
+
+	// back to the left edge. Mid-pass that restarts it, stopped it just rewinds.
+	rewind = {
+		pos = 0;
+		apply.(0);
+		if(playBtn.value == 1) { startTask.() };
 	};
 
 	// a preset flattens every curve it names onto that value: the trajectory
@@ -130,8 +140,7 @@
 					setCurve.(r, Array.fill(steps, r[\spec].unmap(v).clip(0.0, 1.0)))
 				}
 			};
-			stop.();
-			apply.(0.0);
+			apply.(pos);   // flat curves, so where the playhead sits does not matter
 		}
 	};
 
@@ -145,10 +154,10 @@
 
 	// drag to scrub the whole set of curves by hand, as the morph window's does
 	posSlider = Slider(win).orientation_(\horizontal).background_(trough).knobColor_(accent)
-		.fixedHeight_(20).action_({ |v| stop.(); apply.(v.value) });
+		.fixedHeight_(20).action_({ |v| apply.(v.value) });
 	posBox = NumberBox(win).font_(font).align_(\center).fixedWidth_(60).decimals_(3)
 		.background_(panel).normalColor_(text).typingColor_(amber).value_(0)
-		.action_({ |v| stop.(); apply.(v.value.clip(0.0, 1.0)) });
+		.action_({ |v| apply.(v.value.clip(0.0, 1.0)) });
 	posLabel = StaticText(win).string_("playhead").font_(font).stringColor_(text)
 		.align_(\left).fixedWidth_(96);
 
@@ -160,13 +169,20 @@
 	grid.setColumnStretch(1, 1);   // the curves take the width, labels stay fixed
 	grid.setRowStretch(0, 0);      // the playhead keeps its 20px, the rows share the rest
 
+	// One transport for both: there is no sense in a monitor that is playing while
+	// the automation is not, or the other way round. Play starts the proxy and the
+	// pass together, stop pauses both and keeps the playhead, reset winds it back.
+	playBtn = Button(win).font_(font).fixedHeight_(24)
+		.states_([["play", bg, mint], ["stop", text, panel]])
+		.action_({ |v|
+			if(v.value == 1) { ndef.play; startTask.() } { stopTask.(); ndef.stop }
+		});
+
 	// the readout lives up here rather than beside the playhead, so the playhead
 	// itself can run the full width of the curve column
 	transport = HLayout(
-		btn.("play", bg,   mint,   { ndef.play }),
-		btn.("stop", text, panel,  { ndef.stop }),
-		btn.("run",  bg,   mint,   { run.() }),
-		btn.("halt", text, panel,  { stop.() }),
+		playBtn,
+		btn.("reset", bg, accent, { rewind.() }),
 		label.("secs"), durBox,
 		label.("at"), posBox
 	);
@@ -183,14 +199,17 @@
 	// The playhead is inside grid, as its first row.
 	win.layout = VLayout(transport, slotRow, grid).spacing_(10).margins_(12);
 	win.front;
-	win.onClose_({ stop.() });
+	win.onClose_({ stopTask.() });
 
 	// method-style handles, as in the fader and morph windows
 	(window: win, ndef: ndef, rows: rows, presets: presets,
-		run:        { |self, secs| secs !? { durBox.value = secs }; run.() },
-		halt:       { |self| stop.() },
+		run:        { |self, secs|
+			secs !? { durBox.value = secs };
+			playBtn.value = 1; ndef.play; startTask.() },
+		halt:       { |self| playBtn.value = 0; stopTask.(); ndef.stop },
+		rewind:     { |self| rewind.() },
 		recallSlot: { |self, i| recall.(i - 1) },
-		place:      { |self, t| stop.(); apply.(t.clip(0.0, 1.0)) },
+		place:      { |self, t| apply.(t.clip(0.0, 1.0)) },
 		curves:     { |self| rows.collect { |r| r[\curve] } })
 };
 "~ndefCurves defined".postln;

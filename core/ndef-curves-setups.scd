@@ -11,9 +11,10 @@
 //
 // Run the first block once, then whichever setups you want.
 //
-//   ~curves[\sedge].run;          // or .run(60) to override the secs box
+//   ~curves[\sedge].run;          // proxy and pass together; .run(60) sets the secs
+//   ~curves[\sedge].halt;         // pause both, playhead kept
+//   ~curves[\sedge].rewind;
 //   ~curves[\sedge].recallSlot(3);
-//   ~curves[\sedge].halt;
 
 ( // load the GUI function, the material library, and the presets (run once)
 "/Users/bjarni/Works/Pieces/Genesis/core/ndef-curves.scd".load;    // ~ndefCurves

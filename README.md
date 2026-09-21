@@ -36,7 +36,7 @@ Then `~play.(\gorse)` to hear one, `~free.()` to put everything back to sleep.
 | `core/ndef-faders.scd` | the fader GUI: play, reset, four randomize distributions, post |
 | `core/ndef-faders-setups.scd` | one block per process, opens its window |
 | `core/presets.scd` | posted states, one line each; `//` and `/* */` take one out of the set |
-| `core/ndef-curves.scd` | the trajectory editor: one 512-point multislider per parameter, walked over one duration |
+| `core/ndef-curves.scd` | the trajectory editor: one 512-point multislider per parameter, walked over one duration, one transport for proxy and pass |
 | `core/ndef-curves-setups.scd` | one block per process, opens its trajectory window with a duration to match |
 | `core/preset-morph.scd` | travel from one preset to another, nine ways, over a duration |
 | `core/preset-morph-setups.scd` | one block per process, a morph window with duration/curve matched to its own timescale |
