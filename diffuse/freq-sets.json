@@ -1,0 +1,146 @@
+[
+ {
+  "name": "original",
+  "note": "the set in 01-sh.load.scd",
+  "freqs": [
+   178.38,
+   255.19,
+   884.64,
+   1748.73,
+   9043.89,
+   4473.33,
+   1257.74
+  ],
+  "cents": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "mean_cents": 0,
+  "max_cents": 0
+ },
+ {
+  "name": "A tight",
+  "note": "snapped to the nearest strong peak within 100 cents",
+  "freqs": [
+   178.38,
+   255.19,
+   919.3,
+   1686.0,
+   9043.89,
+   4473.33,
+   1227.12
+  ],
+  "cents": [
+   0,
+   0,
+   67,
+   -63,
+   0,
+   0,
+   -43
+  ],
+  "mean_cents": 25,
+  "max_cents": 67
+ },
+ {
+  "name": "B near",
+  "note": "snapped to the nearest strong peak within 300 cents",
+  "freqs": [
+   198.92,
+   281.32,
+   751.03,
+   1502.06,
+   8255.03,
+   4127.51,
+   1227.12
+  ],
+  "cents": [
+   189,
+   169,
+   -283,
+   -263,
+   -158,
+   -139,
+   -43
+  ],
+  "mean_cents": 178,
+  "max_cents": 283
+ },
+ {
+  "name": "C loose",
+  "note": "snapped to the nearest strong peak within 700 cents",
+  "freqs": [
+   128.98,
+   198.92,
+   751.03,
+   1502.06,
+   6941.62,
+   5671.01,
+   1227.12
+  ],
+  "cents": [
+   -561,
+   -431,
+   -283,
+   -263,
+   -458,
+   411,
+   -43
+  ],
+  "mean_cents": 350,
+  "max_cents": 561
+ },
+ {
+  "name": "E shifted",
+  "note": "the original set transposed bodily by -542 cents, every interval intact",
+  "freqs": [
+   130.43,
+   186.59,
+   646.85,
+   1278.67,
+   6612.87,
+   3270.89,
+   919.66
+  ],
+  "cents": [
+   -542,
+   -542,
+   -542,
+   -542,
+   -542,
+   -542,
+   -542
+  ],
+  "mean_cents": 542,
+  "max_cents": 542
+ },
+ {
+  "name": "D modes",
+  "note": "the seven strongest modes, kept in register order",
+  "freqs": [
+   198.92,
+   473.12,
+   751.03,
+   1227.12,
+   6941.62,
+   1502.06,
+   1093.24
+  ],
+  "cents": [
+   189,
+   1069,
+   -283,
+   -613,
+   -458,
+   -1889,
+   -243
+  ],
+  "mean_cents": 678,
+  "max_cents": 1889
+ }
+]

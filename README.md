@@ -25,13 +25,11 @@ Fader window: a slider per parameter, four randomize distributions, eight preset
 
 Morph window: travel from one preset to another, nine ways, over a duration.
 
-![morph](docs/morph.png)
+<img src="docs/morph.png" width="460">
 
 Curve window: one 512-point trajectory per parameter, walked over one duration.
 
 ![curves](docs/curves.png)
-
-`docs/screenshots.scd` regenerates the images.
 
 ## The files
 
