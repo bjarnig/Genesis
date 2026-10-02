@@ -1,28 +1,16 @@
 // wf-waveset.scd
-// Workflow 3: the ring-buffer shape of wf-granulation, with waveset distortion
-// in place of GrainBuf. Six readers stream the same live ring, each running a
-// different CDP-style operation, each seeking to a different distance behind the
-// write head.
-//
-//   ~src -> Ndef(\wwrite)  ring buffer, outputs the write head
-//        -> Ndef(\waveset) omit / repeat / divide / fractal / pitch / reverse
-//
-// Seeking is quantised to waveset boundaries, so the jumps land on zero
-// crossings and the readers stay clickless while their read rates drift.
-// The rates share one attractor, so the six voices pull on each other.
-//
-// Run in order. Waveset UGens: github.com/bjarnig/WavesetUGens
+// Six waveset operations reading a live ring buffer at different distances behind the write head.
 
-( // 1. library and source (run once)
-~here = "/Users/bjarni/Works/Pieces/Genesis/";
+( // library and source
+~here = thisProcess.nowExecutingPath.dirname +/+ "../";
 (~here ++ "core/material-library.scd").load;
-~srcKey = \thistle;                        // any key in ~material.keys
+~srcKey = \thistle;
 ~src = ~gen.(~srcKey);
 ~wring = ~wring ?? { Buffer.alloc(s, s.sampleRate * 3) };
 )
 
 
-( // 2. the ring, and the write head as a signal
+( // ring buffer and write head
 Ndef(\wwrite, {
 	var sig = Mix(~src.ar) * 0.5;
 	var pos = Phasor.ar(0, BufRateScale.kr(~wring), 0, BufFrames.kr(~wring));
@@ -32,8 +20,7 @@ Ndef(\wwrite, {
 )
 
 
-( // 3. six operations on one buffer. Each seeks a different distance behind the
-  //    head, so they are reading the same material at six different ages.
+( // six waveset readers
 Ndef(\waveset, { |amp = 0.35, rate = 1, lag = 0.25, chaos = 1, seekHz = 18,
 	spread = 0.9, drift = 1|
 
@@ -43,12 +30,11 @@ Ndef(\waveset, { |amp = 0.35, rate = 1, lag = 0.25, chaos = 1, seekHz = 18,
 	var trig = Impulse.ar(seekHz * [1, 1.37, 0.61, 2.13, 0.83, 1.71]);
 	var voices;
 
-	// Latoocarfian runs about -1.5 to 1.5; six speeds off one attractor
+	// Latoocarfian spans about -1.5 to 1.5
 	var branch = n.collect { |i|
 		LatoocarfianL.ar(chaos * 3 * (2 ** (i / 3))).linlin(-1.5, 1.5, 0, 1).clip(0, 1)
 	};
 
-	// each voice reads at its own age, breathing with its own branch
 	var seek = n.collect { |i|
 		(head - (lag * ((i + 1) / n) * branch[i].linlin(0, 1, 0.3, 2))).wrap(0, 1)
 	};
@@ -65,14 +51,12 @@ Ndef(\waveset, { |amp = 0.35, rate = 1, lag = 0.25, chaos = 1, seekHz = 18,
 		WavesetReverse.ar(buf, branch[5].linlin(0, 1, 1, 6).round, r[5], trig: trig[5], seek: seek[5])
 	];
 
-	// panned across the field by age: recent on one side, oldest on the other
 	Mix(voices.collect { |v, i| Pan2.ar(v, ((i / (n - 1) * 2) - 1) * spread) }) * amp
 }).play;
 )
 
 
-( // 4. the seek rate follows the material: the busier the source, the more often
-  //    the readers jump, so dense passages fragment and quiet ones stream.
+( // seek rate follows source level
 Ndef(\wsense, {
 	Amplitude.kr(Mix(~src.ar), 0.02, 0.25).linexp(0.001, 0.3, 3, 60).lag(0.3)
 });
@@ -80,7 +64,7 @@ Ndef(\waveset).map(\seekHz, Ndef(\wsense));
 )
 
 
-( // 5. close the loop onto the source
+( // feedback onto the source
 Ndef(\wreturn, {
 	Amplitude.kr(Mix(Ndef(\waveset).ar), 0.08, 0.6).linlin(0, 0.5, 1.0, 0.15).lag(2)
 });
@@ -88,16 +72,15 @@ Ndef(\wreturn, {
 )
 
 
-/*  playing with it
+/* try
 
-Ndef(\waveset).set(\rate, 0.25, \lag, 0.9);        // slow, long memory
-Ndef(\waveset).set(\chaos, 6, \drift, 2);          // rates scatter wildly
-Ndef(\waveset).set(\seekHz, 200);                  // shredded, barely streaming
+Ndef(\waveset).set(\rate, 0.25, \lag, 0.9);
+Ndef(\waveset).set(\chaos, 6, \drift, 2);
+Ndef(\waveset).set(\seekHz, 200);
 Ndef(\waveset).unmap(\seekHz); Ndef(\waveset).set(\seekHz, 4);
 
 ~src.unmap(\amp); ~src.set(\amp, 0.7);
 
-// a longer ring holds more history for the oldest readers
 ~wring.free; ~wring = Buffer.alloc(s, s.sampleRate * 10); Ndef(\wwrite).rebuild;
 
 Ndef(\waveset).stop; Ndef(\wwrite).clear; ~free.();

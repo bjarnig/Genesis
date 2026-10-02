@@ -1,9 +1,5 @@
 // material-library.scd
-// The processes of sketches/material-combined-v4.scd kept as source functions instead of
-// live proxies. Evaluating an Ndef/NF definition instantiates it at once, so a
-// file of ten of them runs ten synths whether or not you ever hear them; here
-// nothing reaches the server until a key is asked for.
-//
+// Process source functions; nothing reaches the server until a key is asked for.
 //   ~gen.(\fern)        // instantiate, silent: running into its own bus only
 //   ~gen.(\fern).play   // ... and out to the hardware
 //   ~play.(\fern)       // both in one step
@@ -13,8 +9,6 @@
 //   ~loaded             // what is instantiated right now
 //   ~material.keys      // what is on offer
 //
-// ~gen returns the proxy, so it drops straight into a fader setup:
-//   ~ndefFaders.(~gen.(\fern), ( ... ))
 
 (
 
@@ -28,11 +22,7 @@
 		var scale = 0.25;
 		var factors = [15, 5, 10, 20] * factorsMult;
 
-		// Cyclegen fixes knum and the freqs array when the synth is built: the LFNoise
-		// only seeds one knum per channel, so its rate is not a control. Transposition
-		// goes through freqMul, which is read live, hence the detune lands there too.
-		// depth as a transposition ratio around 1; lfnFreq is only the rate, so it is
-		// silent until one of these is opened up. The floor keeps freqMul off zero.
+		// Cyclegen fixes knum and freqs at build; transposition goes through freqMul, read live
 		var detune = LFNoise0.kr(lfnFreq).range((1 - detuneLo).max(0.05), 1 + detuneHi);
 
 		var scatter = Cyclegen.ar(
@@ -42,7 +32,6 @@
 			freqs: Array.rand(16, 1, 1000) * freqMult2
 		) * scale;
 
-		// harmScale sets where this layer sits: 0.0625 keeps it subaudio, 1 puts it at pitch
 		var harmonic = Cyclegen.ar(
 			LFNoise1.ar(factors).range(knumFrom, knumTo),
 			ampStep: ampStepB, stiffness: stiffnessB, templateType: templateType, seqMode: seqMode,
@@ -73,7 +62,7 @@
 		var grains = Grainstoch.ar(
 			LFNoise1.ar(factors * lfnFreq).range(freqFrom, freqTo), knum,
 			duty: duty, ampStep: ampStep, jitter: jitter
-		) * amp * grainGain;   // the grain layer sits ~12 dB under the folded one at 0.5
+		) * amp * grainGain;
 
 		folded + grains
 	}),
@@ -171,8 +160,7 @@
 			sd * Dbrown(brownLo, brownHi, step)
 		) * mf;
 
-		// steps ramps from -1 well past 0 before wrapping, which is most of the DC
-		// defect; LeakDC removes it without touching the ramp's audible motion
+		// LeakDC removes the DC from the ramp's wrap
 		var steps = LeakDC.ar(DemandEnvGen.ar(
 			Dseq([Dseries(-1.0, stepsStep, stepsLen ! 4)], inf),
 			Dseq([
@@ -184,9 +172,6 @@
 		(foral + steps) * amp
 	}),
 
-	// replaces the old thistle (2026-09-15): a bank of 4 bandpasses wandering
-	// over a noise-modulated Q, fed by a DemandEnvGen ramp. Kept 4-channel to
-	// match the rest of the library, so it still goes through the spatialisers.
 	thistle: (proxy: NF, func: { |fspeed = 0.2, sdm = 40, bpresfrom = 0.005, bpresto = 0.2,
 		a = 9, b = 5, min = 0.05, max = 0.5, freqLo = 100, freqHi = 2000,
 		sdRandLo = 0.125, sdRandHi = 2.0, drive = 20, amp = 0.5|
@@ -194,7 +179,7 @@
 		var channels = 4;
 		var bpfreqs = Array.series(channels, freqLo, (freqHi - freqLo) / channels);
 		var sd = SampleDur.ir * sdm * Array.rand(channels, sdRandLo, sdRandHi);
-		// one Q-wander rate per channel, fanned out from fspeed so they drift apart
+		// one Q-wander rate per channel, fanned out from fspeed
 		var fspeedArray = [fspeed, fspeed * 1.2, fspeed * 1.4, fspeed * 1.6];
 
 		var snd = DemandEnvGen.ar(
@@ -258,8 +243,6 @@
 			Dseq([sd * aa, sd * bb], inf)
 		).fold2(SinOsc.ar(freq * 2 * b)) * amp, 40 + (200 * a)), peakFreq, 1, peakGain, 2);
 
-		// the band centres ride sawFreq so the feedback layer has a pitch that moves;
-		// the ratios between them stay random per build
 		sig = Saw.ar(sawFreq);
 		input = sig + LocalIn.ar(4);
 		snd = SoftClipAmp8.ar(
@@ -267,7 +250,7 @@
 			sig.linlin(-1.0, 1.0, 14.rand, 18.rand));
 		snd = DelayC.ar(snd, 1, LFNoise2.ar({ 20.rand } ! 4).range(delay, delay * 1.1));
 		LocalOut.ar(snd * feedback * rrand(0.9999, 0.999999));
-		fbx = Limiter.ar(HPF.ar(snd, hpf) * fbGain);   // was pinned at 0.1, 12 dB under the plane
+		fbx = Limiter.ar(HPF.ar(snd, hpf) * fbGain);
 
 		plane + fbx
 	}),
@@ -275,8 +258,6 @@
 	teasel: (proxy: NF, func: { |modRate = 10, modFrom = 100, modTo = 10070, peakFreq = 400, lpf = 1070, hpf = 30,
 		carrier = 1, sdm = 0.15, gateRate = 1, sparkleGain = 0.4, demGain = 2, amp = 0.7|
 
-		// carrier scales the 30 s sweep that used to be the only thing setting this
-		// layer's pitch, so it can leave the subaudio range
 		var mod = PMOsc.ar(XLine.ar(5, 18, 30) * carrier, LFDClipNoise.ar(modRate).range(modFrom, modTo), 1);
 
 		var sparkling = sparkleGain * BPeakEQ.ar(
@@ -302,7 +283,7 @@
 
 ~loaded = IdentitySet.new;
 
-// instantiate on demand; re-asking for a live key just hands it back
+// re-asking for a live key returns it
 ~gen = { |key|
 	var def = ~material[key] ?? { Error("no process called" + key).throw };
 	~loaded.add(key);
@@ -311,7 +292,6 @@
 
 ~play = { |key| ~gen.(key).play };
 
-// no key frees everything loaded
 ~free = { |key|
 	(key !? { [key] } ?? { ~loaded.asArray }).do { |k|
 		~material[k][\proxy].new(k).clear;

@@ -1,12 +1,7 @@
-// of/of-drift.scd
-// moss (grain/fold texture) drifting under clover (DC-free ramp/steps texture)
-// through OF's processing library. Run of-setup.scd first.
-//
-// moss:   lfnFreq, mod, from, to, freqFrom, freqTo, jitter, ampStep, duty, hpf,
-//         sdm, grainGain, knum, factorsMult, amp
-// clover: ser, sdm, step, brownLo, brownHi, mf, stepsGain, stepsStep, stepsLen, amp
+// of-drift.scd
+// moss and clover drifting through the OF processing library. Run of-setup.scd first.
 
-( // hear the pair plain
+( // plain pair
 a = ~gen.(\moss).play;
 b = ~gen.(\clover).play;
 )
@@ -17,9 +12,7 @@ b = ~gen.(\clover).play;
 ("moss states: " ++ ~mossStates.size ++ "   clover states: " ++ ~cloverStates.size).postln;
 )
 
-// a scripted pass: settle on a preset, sit, then fold a processing stage on top
-// mid-stream - the same move as Antithesis's A.Grunt Section 2 (.transform
-// applied partway through a running TF, not at the start)
+// scripted pass, folding a processing stage in mid-stream
 (
 TF(\driftIntro, {
 	0.5.wait; "0".postln;
@@ -35,7 +28,7 @@ TF(\driftIntro, {
 }).play;
 )
 
-// then wander: each jumps to one of its own presets at its own pace
+// random preset jumps, each at its own pace
 (
 Tdef(\drift, {
 	inf.do {
@@ -54,6 +47,6 @@ Tdef(\driftB, {
 
 Tdef(\drift).stop; Tdef(\driftB).stop;
 
-( // back to silence
+( // free
 ~free.(\moss); ~free.(\clover);
 )

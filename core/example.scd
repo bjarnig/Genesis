@@ -1,10 +1,7 @@
-// example.scd
-// The whole folder in the order it wants to be run. One block at a time.
-// Nothing makes a sound until you ask for it: the library instantiates a process
-// into its own bus, and only .play puts a monitor on the hardware.
+// example.scd: the running order, one block at a time. Nothing sounds until .play.
 
 ( // 1. load everything (run once)
-~here = "/Users/bjarni/Works/Pieces/Genesis/";
+~here = thisProcess.nowExecutingPath.dirname +/+ "../";
 (~here ++ "core/material-library.scd").load;   // ~material, ~gen, ~play, ~solo, ~free, ~loaded
 (~here ++ "core/fader-specs.scd").load;        // ~specs, the fader range per parameter
 (~here ++ "core/ndef-faders.scd").load;        // ~ndefFaders
@@ -40,19 +37,11 @@
 )
 
 
-// 7. or send the material into a workflow instead. Each is its own file with
-//    its own source and blocks to run in order, so open one and work down it.
-//    They are block-by-block files like this one, not things to .load.
-//    All five live in workflows/.
-//
-//      wf-granulation.scd   ring buffer -> a family of grain readers
-//      wf-sediment.scd      the Sediment granulators, chained and cross-driven
-//      wf-waveset.scd       waveset distortion off a live ring
-//      wf-feedback.scd      a self-regulating feedback network
-//      wf-resonance.scd     a resonator bank tuned by the material
+// 7. or open a workflow: workflows/wf-*.scd (granulation, sediment, waveset, feedback, resonance)
+//    are block-by-block files like this one, not things to .load
 
 
-/*  the rest of it, once the above makes sense
+/*
 
 ~solo.(\teasel);              // free everything else and play this one
 ~free.(\gorse);               // one process back to sleep
@@ -60,7 +49,7 @@
 
 ~faders[\gorse].randomize(\beta);    // uni, beta, exp, walk
 ~faders[\gorse].resetAll;            // every fader back to the Ndef's own default
-~faders[\gorse].printState;          // print the state; paste it into core/presets.scd
+~faders[\gorse].printState;          // print the state; paste into presets.scd
 
 ~morph.place(0.5);            // sit between the two presets by hand
 ~morph.cancel;                // abandon a morph in progress

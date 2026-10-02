@@ -1,19 +1,11 @@
 // fader-specs.scd
-// The fader range for every parameter of every process: min, max, warp, step and
-// the Ndef's own default. One evaluable block, so both the fader GUI and the
-// preset morpher can have it without opening a window.
-//
-//   ControlSpec(min, max, warp, step, default)
-//
-// This is the file to edit when a knob feels too narrow. A parameter left out of
-// a table gets no fader and keeps whatever the Ndef starts it at.
+// Fader range per parameter per process: ControlSpec(min, max, warp, step, default).
 
 (
 ~specs = ~specs ? ();
 
 ~specs[\fern] = (
-	// knumFrom / knumTo still only bite on the next ~gen.(\fern): Cyclegen fixes
-	// knum when the synth is built, so a fader move here does nothing live.
+	// knumFrom/knumTo apply only on the next ~gen: Cyclegen fixes knum at build
 	lfnFreq:      ControlSpec(0.005, 40, \exp, 0, 0.25),
 	repeats:      ControlSpec(1, 16, \lin, 1, 1),
 	freqMult:     ControlSpec(0.25, 10, \exp, 0, 1),
@@ -156,8 +148,7 @@
 );
 
 ~specs[\gorse] = (
-	// a, b and c are floored: at 0 they mute or freeze the plane layer, and
-	// randomize would keep landing on those duds
+	// a, b, c are floored: at 0 they mute or freeze the plane layer
 	a:        ControlSpec(0.05, 1.0, \lin, 0, 0.5),
 	b:        ControlSpec(0.05, 1.0, \lin, 0, 0.5),
 	c:        ControlSpec(0.05, 4.0, \exp, 0, 0.5),
@@ -174,7 +165,6 @@
 );
 
 ~specs[\teasel] = (
-	// carrier, sdm and gateRate were hardcoded: they are what sets the pitch here
 	carrier:     ControlSpec(0.5, 200, \exp, 0, 1),
 	sdm:         ControlSpec(0.02, 40, \exp, 0, 0.15),
 	gateRate:    ControlSpec(0.05, 20, \exp, 0, 1),

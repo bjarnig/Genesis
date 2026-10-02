@@ -1,35 +1,21 @@
 // preset-morph.scd
-// Move an Ndef/NF from one preset to another: a state to start from, a state to
-// go to, a way of travelling, and how long it takes. The presets are the lines
-// the fader GUI's post button prints, read straight out of presets.scd.
+// Morph an Ndef/NF between two presets read from presets.scd.
 //
-// See ../example.scd for the running order. The short version:
-//
-//   ~presets = ~loadPresets.("/Users/bjarni/Works/Pieces/Genesis/core/presets.scd");
+//   ~presets = ~loadPresets.(~here ++ "core/presets.scd");
 //   m = ~presetMorph.(\gorse, ~presets[\gorse]);
 //   m.ndef.play;
 //   m.go(3, \zigzag, 20);    // to preset 3, zigzagging, over 20 seconds
 //   m.place(0.5);            // or sit between the two by hand
 //   m.cancel;                // abandon a morph in progress
 //
-// Pass ~specs[\gorse] as a third argument to blend in fader space, so an \exp
-// frequency glides geometrically rather than linearly. Without it, blending is
-// linear on raw values. go always travels from the `from` preset to the `to` one,
-// so the slider stays meaningful and you can walk back; press swap to chain.
-// NF inherits from Ndef, so both work the same way here.
-//
-// dur and curve (5th/6th args) just seed the window's own secs/how controls -
-// still yours to change by hand after it opens. See preset-morph-setups.scd
-// for one block per process with a duration/curve matched to its own timescale.
+// Pass ~specs[\gorse] as third argument to blend in fader space (else raw values).
 
 (
 
-// presets.scd holds one `NF('gorse').set(\a, 0.75, ...);` line per preset, which
-// is exactly what the fader GUI's post button prints. Lines inside /* */ or after
-// // are skipped, so parking a preset in a comment takes it out of the set.
+// Lines inside /* */ or after // are skipped, so a parked preset is out of the set.
 ~loadPresets = { |path|
 	var out = (), inComment = false;
-	~presetClasses = ~presetClasses ? ();   // key -> NF or Ndef, as the file writes it
+	~presetClasses = ~presetClasses ? ();
 	File.readAllString(path.standardizePath).split($\n).do { |line|
 		var l = line.stripWhiteSpace, m;
 		if(l.contains("/*")) { inComment = true };
@@ -47,13 +33,12 @@
 	out
 };
 
-// t runs 0 to 1 over the duration; each returns where between A and B to sit.
-// Add your own here: any function of t that ends at 1 will do.
+// t runs 0 to 1; each returns the position between A and B.
 ~morphCurves = (
-	jump:    { |t| t.ceil },                                      // there on the first step
-	hold:    { |t| t.floor },                                     // stay on A, arrive at the end
+	jump:    { |t| t.ceil },
+	hold:    { |t| t.floor },
 	linear:  { |t| t },
-	smooth:  { |t| t.squared * (3 - (2 * t)) },                    // ease in and out
+	smooth:  { |t| t.squared * (3 - (2 * t)) },
 	accel:   { |t| t.cubed },
 	decel:   { |t| 1 - (1 - t).cubed },
 	zigzag:  { |t| (t + (sin(t * 8 * pi) * 0.4 * sin(t * pi))).clip(0, 1) },
@@ -80,8 +65,7 @@
 	var win, fromMenu, toMenu, methodMenu, durBox, posSlider, posBox;
 	var blend, go, stop, post, btn, label;
 
-	// a symbol resolves through the material library when it is loaded, so the proxy
-	// arrives with a source; failing that, through the class named in presets.scd
+	// a symbol resolves through the material library, else the class named in presets.scd
 	if(ndef.isKindOf(Symbol)) {
 		resolved = if(~gen.notNil) { ~gen.(ndef) } { (~presetClasses[ndef] ? Ndef).new(ndef) };
 		ndef = resolved;
@@ -102,8 +86,7 @@
 		Button(win).font_(font).fixedHeight_(24).states_([[str, fg, bgc]]).action_(action)
 	};
 
-	// one blend position: 0 sits on A, 1 on B. Keys missing from either side hold
-	// the value they have on the other, so presets of different vintage still morph.
+	// 0 sits on A, 1 on B; keys missing from one side hold the other's value
 	blend = { |t|
 		var a = presets[from], b = presets[to], args = [];
 		(a.keys | b.keys).do { |k|
@@ -124,7 +107,6 @@
 
 	stop = { task.stop; task = nil };
 
-	// travel from where we are now to preset `target` over `dur` seconds
 	go = { |target, method, dur|
 		var curve, dt = 0.02, steps;
 		target !? { to = (target - 1).clip(0, presets.size - 1); { toMenu.value = to }.defer };
@@ -135,7 +117,7 @@
 		stop.();
 		task = Routine {
 			(steps + 1).do { |i| blend.(curve.(i / steps)); dt.wait };
-			blend.(1.0);            // always land exactly on B
+			blend.(1.0);
 		}.play(AppClock);
 		task
 	};
@@ -166,8 +148,7 @@
 				fromMenu.value = from; toMenu.value = to })),
 		HLayout(label.("how"), methodMenu, label.("secs"), durBox, nil),
 		HLayout(posSlider, posBox),
-		// ~gen instantiates the proxy into its own bus only, so without this the
-		// morph runs silently: play is what puts a monitor on the hardware
+		// ~gen runs into its own bus only; play adds the hardware monitor
 		HLayout(
 			btn.("play", bg,   mint,   { ndef.play }),
 			btn.("stop", text, panel,  { ndef.stop }),
@@ -184,10 +165,10 @@
 	win.front;
 	win.onClose_({ stop.() });
 
-	// method-style handles, named clear of Event's own \stop / \blend / \post
+	// method-style handles, named clear of Event's \stop / \blend / \post
 	(window: win, ndef: ndef, presets: presets,
 		go:         { |self, target, method, dur| go.(target, method, dur) },
-		place:      { |self, t| stop.(); blend.(t) },   // takes over from a running morph, as the slider does
+		place:      { |self, t| stop.(); blend.(t) },
 		cancel:     { |self| stop.() },
 		printState: { |self| post.() })
 };
