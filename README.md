@@ -43,10 +43,6 @@ Curve window: one 512-point trajectory per parameter, walked over one duration.
 - `workflows/of/`: processes woven together through OF's `.stack`/`.transform` chains
 - `spatial/spatialisers.scd`: five ways of putting a 4-channel process into 8 channels
 
-## Worth knowing
+## Requirements
 
-- Handles are called method-style: `~faders[\gorse].randomize(\beta)`, `~morph.go(3, \zigzag, 20)`. Dot access on an Event calls the function it finds, so `.randomize.(\beta)` silently drops the argument.
-- `Cyclegen` fixes `knum` and `freqs` at build time, so fern's `knumFrom`/`knumTo` only bite on the next `~gen.(\fern)`.
-- Preset blending happens in fader space, so an `\exp` parameter glides geometrically. That needs `~specs`; without it the blend is linear.
-- All ten processes are `NF`, the OF library's `Ndef` subclass, so any of them can `.stack`/`.transform`.
-- Summing two processes and stacking OF filters adds up fast: trim `amp` when performing.
+[OF](https://github.com/bjarnig/OF), a SuperCollider extension. All ten processes are `NF`, its `Ndef` subclass, and the `workflows/of/` files use its `.stack`/`.transform` chains.
