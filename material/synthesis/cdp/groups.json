@@ -1,0 +1,262 @@
+{
+ "groups": [
+  {
+   "name": "thin",
+   "why": "shortest wavecycles: dense and bright, so take cycles away",
+   "processes": [
+    "distort delete 2",
+    "distort omit",
+    "distort telescope"
+   ],
+   "size": 45,
+   "population": {
+    "gorse": 20,
+    "sedge": 12,
+    "bramble": 11,
+    "moss": 2
+   },
+   "pick_processes": 4,
+   "pick_cap": 2,
+   "pick_dist": [
+    1.98,
+    2.2,
+    2.64,
+    2.84,
+    2.94
+   ],
+   "cyc_median": 5.0,
+   "cyc_hz": 9600.0,
+   "centroid": 9535,
+   "onsets": 4.79,
+   "cyclecnt": {
+    "8ms": 77,
+    "30ms": 288,
+    "120ms": 1152,
+    "400ms": 3840
+   },
+   "files": [
+    "sedge03-4",
+    "moss05-2",
+    "bramble05-3",
+    "gorse05-2",
+    "bramble06-4"
+   ]
+  },
+  {
+   "name": "pitchy",
+   "why": "brightest: pitchwarping the cycles stays audible",
+   "processes": [
+    "distort pitch",
+    "distort reform 1",
+    "distort filter 1"
+   ],
+   "size": 24,
+   "population": {
+    "bramble": 16,
+    "moss": 4,
+    "teasel": 4
+   },
+   "pick_processes": 3,
+   "pick_cap": 2,
+   "pick_dist": [
+    1.99,
+    2.02,
+    3.0,
+    2.05,
+    4.81
+   ],
+   "cyc_median": 7.5,
+   "cyc_hz": 6400.0,
+   "centroid": 11467,
+   "onsets": 5.22,
+   "cyclecnt": {
+    "8ms": 51,
+    "30ms": 192,
+    "120ms": 768,
+    "400ms": 2560
+   },
+   "files": [
+    "bramble04-3",
+    "moss05-4",
+    "teasel06-4",
+    "bramble01-3",
+    "moss02-2"
+   ]
+  },
+  {
+   "name": "scatter",
+   "why": "busiest: reordering needs events to reorder",
+   "processes": [
+    "distort shuffle",
+    "extend scramble 1",
+    "distshift distshift 1"
+   ],
+   "size": 35,
+   "population": {
+    "yarrow": 20,
+    "moss": 7,
+    "sedge": 4,
+    "teasel": 4
+   },
+   "pick_processes": 4,
+   "pick_cap": 2,
+   "pick_dist": [
+    2.89,
+    3.12,
+    5.39,
+    6.71,
+    3.24
+   ],
+   "cyc_median": 8.0,
+   "cyc_hz": 6000.0,
+   "centroid": 3479,
+   "onsets": 6.45,
+   "cyclecnt": {
+    "8ms": 48,
+    "30ms": 180,
+    "120ms": 720,
+    "400ms": 2400
+   },
+   "files": [
+    "yarrow03-2",
+    "moss08-3",
+    "sedge01-3",
+    "teasel01-3",
+    "yarrow04-4"
+   ]
+  },
+  {
+   "name": "shape",
+   "why": "peakiest: a per-group envelope has something to bite on",
+   "processes": [
+    "distort envel 1",
+    "distort envel 2",
+    "distort envel 3"
+   ],
+   "size": 47,
+   "population": {
+    "nettle": 19,
+    "moss": 11,
+    "thistle": 11,
+    "teasel": 4,
+    "bramble": 1,
+    "yarrow": 1
+   },
+   "pick_processes": 5,
+   "pick_cap": 1,
+   "pick_dist": [
+    1.89,
+    2.93,
+    3.16,
+    3.45,
+    4.74
+   ],
+   "cyc_median": 32.0,
+   "cyc_hz": 1500.0,
+   "centroid": 1896,
+   "onsets": 6.17,
+   "cyclecnt": {
+    "8ms": 12,
+    "30ms": 45,
+    "120ms": 180,
+    "400ms": 600
+   },
+   "files": [
+    "moss03-1",
+    "nettle06-1",
+    "teasel07-2",
+    "bramble07-4",
+    "yarrow05-1"
+   ]
+  },
+  {
+   "name": "stretch",
+   "why": "longest wavecycles: repeating them reads as granular stretch",
+   "processes": [
+    "distort repeat",
+    "distort repeat2",
+    "distort replim"
+   ],
+   "size": 36,
+   "population": {
+    "ferna": 20,
+    "clover": 4,
+    "moss": 4,
+    "teasel": 4,
+    "yarrow": 3,
+    "thistle": 1
+   },
+   "pick_processes": 5,
+   "pick_cap": 1,
+   "pick_dist": [
+    1.6,
+    2.6,
+    2.96,
+    3.08,
+    4.14
+   ],
+   "cyc_median": 236.0,
+   "cyc_hz": 203.4,
+   "centroid": 763,
+   "onsets": 6.05,
+   "cyclecnt": {
+    "8ms": 2,
+    "30ms": 6,
+    "120ms": 24,
+    "400ms": 81
+   },
+   "files": [
+    "ferna04-2",
+    "moss06-2",
+    "teasel02-2",
+    "clover05-3",
+    "yarrow05-3"
+   ]
+  },
+  {
+   "name": "rough",
+   "why": "most tonal: there is room to put grit inside the cycles",
+   "processes": [
+    "distort fractal",
+    "distort overload 1",
+    "distort harmonic"
+   ],
+   "size": 61,
+   "population": {
+    "clover": 28,
+    "teasel": 12,
+    "bramble": 8,
+    "nettle": 5,
+    "gorse": 4,
+    "moss": 4
+   },
+   "pick_processes": 5,
+   "pick_cap": 1,
+   "pick_dist": [
+    1.24,
+    1.47,
+    2.29,
+    2.6,
+    2.67
+   ],
+   "cyc_median": 349.0,
+   "cyc_hz": 137.5,
+   "centroid": 1684,
+   "onsets": 6.59,
+   "cyclecnt": {
+    "8ms": 1,
+    "30ms": 4,
+    "120ms": 17,
+    "400ms": 55
+   },
+   "files": [
+    "clover03-2",
+    "bramble08-4",
+    "teasel03-4",
+    "moss07-1",
+    "nettle02-2"
+   ]
+  }
+ ],
+ "files": 248
+}

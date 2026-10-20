@@ -17,3 +17,22 @@ modules/
 demos/
 ideas/
 sections/
+
+# audio and ableton
+*.wav
+*.aif
+*.aiff
+*.flac
+*.mp3
+*.ogg
+*.m4a
+*.reapeaks
+*.asd
+*.als
+*.alc
+*.adg
+*.adv
+*.ams
+Ableton Project Info/
+Icon?
+.DS_Store
